@@ -1,23 +1,6 @@
 from __future__ import annotations
 
 import os
-import sys
-import subprocess
-from pathlib import Path
-
-# ============================================================
-# APOLLO-NET AUTO ENVIRONMENT + FRONTEND LAUNCHER
-# ============================================================
-
-PROJECT_ROOT = Path(__file__).resolve().parent
-VENV_PYTHON = PROJECT_ROOT / "venv" / "Scripts" / "python.exe"
-
-# If main.py was started with normal/global Python,
-# automatically restart it using the project's venv.
-if sys.prefix == sys.base_prefix and VENV_PYTHON.exists():
-    os.execv(str(VENV_PYTHON), [str(VENV_PYTHON), str(Path(__file__).resolve())])
-
-# ============================================================
 
 import asyncio
 import math
@@ -589,12 +572,21 @@ app = FastAPI(
     version="4.0.0"
 )
 
+configured_origin = os.getenv("FRONTEND_ORIGIN", "").strip()
+allowed_origins = [
+    origin.strip()
+    for origin in configured_origin.split(",")
+    if origin.strip()
+]
+allowed_origins.extend([
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+])
+allowed_origins = list(dict.fromkeys(allowed_origins))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -776,65 +768,3 @@ async def simulation_loop():
 async def startup():
     asyncio.create_task(simulation_loop())
 
-
-# Run directly:
-# python main.py
-if __name__ == "__main__":
-    import uvicorn
-
-    frontend_process = None
-
-    try:
-        print()
-        print("=" * 60)
-        print("             APOLLO-NET v4")
-        print("=" * 60)
-        print("Python environment : venv")
-        print("Backend            : http://127.0.0.1:8000")
-        print("Frontend           : http://localhost:5173")
-        print("=" * 60)
-        print()
-
-        # --------------------------------------------------------
-        # Start React/Vite frontend automatically
-        # --------------------------------------------------------
-        npm_command = "npm.cmd" if os.name == "nt" else "npm"
-
-        frontend_process = subprocess.Popen(
-            [npm_command, "run", "dev"],
-            cwd=str(PROJECT_ROOT)
-        )
-
-        print("✓ React frontend started")
-        print("✓ FastAPI backend starting...")
-        print()
-
-        # --------------------------------------------------------
-        # Start FastAPI backend
-        # IMPORTANT: reload=False
-        # --------------------------------------------------------
-        uvicorn.run(
-            app,
-            host="127.0.0.1",
-            port=8000,
-            reload=False
-        )
-
-    except KeyboardInterrupt:
-        print("\nStopping Apollo-Net...")
-
-    finally:
-        # --------------------------------------------------------
-        # Stop React/Vite when backend is stopped
-        # --------------------------------------------------------
-        if frontend_process is not None:
-            try:
-                frontend_process.terminate()
-                frontend_process.wait(timeout=5)
-            except Exception:
-                try:
-                    frontend_process.kill()
-                except Exception:
-                    pass
-
-        print("Apollo-Net stopped.")

@@ -6,7 +6,7 @@ import {
   Radar, Activity, Cpu, Satellite, Target, Zap, Wifi, WifiOff
 } from "lucide-react";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+const BACKEND = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 const WS_URL = import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000/ws";
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
