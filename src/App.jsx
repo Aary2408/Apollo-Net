@@ -6,8 +6,13 @@ import {
   Radar, Activity, Cpu, Satellite, Target, Zap, Wifi, WifiOff
 } from "lucide-react";
 
-const BACKEND = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000/ws";
+const browserOrigin = typeof window !== "undefined" ? window.location.origin : "";
+const defaultBackend = import.meta.env.PROD ? browserOrigin : "http://127.0.0.1:8000";
+const BACKEND = (import.meta.env.VITE_BACKEND_URL || defaultBackend).replace(/\/$/, "");
+const defaultWsUrl = import.meta.env.PROD
+  ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws`
+  : "ws://127.0.0.1:8000/ws";
+const WS_URL = import.meta.env.VITE_WS_URL || defaultWsUrl;
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const distance = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
