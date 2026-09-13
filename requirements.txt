@@ -3,5 +3,5 @@ uvicorn[standard]==0.34.0
 numpy==2.2.1
 opencv-python-headless==4.10.0.84
 networkx==3.4.2
-pydantic==2.10.4
+pydantic==2.12.5
 python-multipart==0.0.20
